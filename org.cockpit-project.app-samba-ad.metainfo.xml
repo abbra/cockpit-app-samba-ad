@@ -1,0 +1,20 @@
+<component type="addon">
+  <id>org.cockpit-project.app-samba-ad</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <name>Samba AD</name>
+  <icon type="local" height="64" width="64">/usr/share/metainfo/org.cockpit-project.app-samba-ad.64x64.png</icon>
+  <summary>
+    Samba AD
+  </summary>
+  <description>
+    <p>
+	    Samba AD is an Active Directory Domain Controller for Linux/UNIX
+	    networked environments.  Samba AD server provides centralized
+	    authentication, authorization and account information by storing
+	    data about user, groups, hosts and other objects necessary to
+	    manage the security aspects of a network of Windows computers.
+    </p>
+  </description>
+  <extends>cockpit.desktop</extends>
+  <launchable type="cockpit-manifest">app-samba-ad</launchable>
+</component>

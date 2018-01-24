@@ -1,0 +1,6 @@
+/node_modules/
+/dist/
+/cockpit-app-samba-ad.tar.gz
+/cockpit-app-samba-ad-*-*.*.rpm
+/webpack.inputs
+/package-lock.json

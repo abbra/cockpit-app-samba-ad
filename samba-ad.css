@@ -1,0 +1,52 @@
+.status-spinner {
+    margin-top: 100px;
+}
+
+.setup-message {
+    margin-top: 50px;
+}
+
+.header td {
+    vertical-align: middle !important;
+    border-top: 0px !important;
+    border-bottom: 1px solid #d1d1d1;
+}
+
+.header td:nth-child(1) {
+    width: 50px;
+}
+
+.header td img {
+    width: 32px;
+    height: 32px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.header td:nth-child(3) {
+    text-align: right;
+}
+
+.header td:nth-child(4) {
+    width: 80px;
+}
+
+.header td:nth-child(4) button {
+    width: 100%;
+}
+
+.status-table > tr > td:nth-child(2) {
+    text-align: right;
+}
+
+.service-status-table td:nth-child(1) {
+    padding-right: 5em;
+}
+
+.service-status-table td:nth-child(2).STOPPED {
+    color: red;
+}
+
+.port-status-table td:nth-child(1) {
+    padding-right: 5em;
+}

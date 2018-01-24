@@ -1,0 +1,18 @@
+#!/bin/env python
+from __future__ import print_function
+import os
+import sys
+import json
+
+client_installed, server_installed = (False, False)
+
+result = dict()
+result['result'] = 'NOT_CONFIGURED'
+
+if client_installed and server_installed:
+    result['result'] = 'SERVER_CONFIGURED'
+elif client_installed and not server_installed:
+    result['result'] = 'CLIENT_CONFIGURED'
+
+print(json.dumps(result))
+

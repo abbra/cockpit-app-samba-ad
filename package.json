@@ -1,0 +1,26 @@
+{
+    "name": "cockpit-app-samba-ad",
+    "private": true,
+    "dependencies": {
+        "jquery": "2.1.4",
+        "react-lite-cockpit": "cockpit-project/react-lite",
+        "mustache": ""
+    },
+    "devDependencies": {
+        "webpack": "",
+        "extract-text-webpack-plugin": "",
+        "copy-webpack-plugin": "",
+        "babel-core": "",
+        "babel-loader": "",
+        "babel-preset-es2015": "",
+        "babel-preset-react": "",
+        "css-loader": "",
+        "eslint": "",
+        "eslint-plugin-react": "",
+        "eslint-loader": "",
+        "raw-loader": ""
+    },
+    "scripts": {
+        "build": "./webpack-with-stats"
+    }
+}
