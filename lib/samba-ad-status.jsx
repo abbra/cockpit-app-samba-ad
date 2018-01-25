@@ -90,73 +90,38 @@ class FirewallPorts extends React.Component {
 
 /* STATUS */
 
-function parse_ipactl_status(text, conf) {
-    var config_re = /^(.+)=(.+)$/;
-    var config = { };
-
-    conf.split("\n").forEach(l => {
-        var m = config_re.exec(l);
-        if (m)
-            config[m[1].trim()] = m[2].trim();
-    });
-
-    var service_re = /^(.+) Service: (.+)$/;
-    var services = [ ];
-    var stopped = true;
+function parse_samba_tool_domain_info(text) {
+    var env_re = /^(.+):(.+)$/;
+    var env = [ ];
 
     text.split("\n").forEach(l => {
-        var m = service_re.exec(l);
+        var m = env_re.exec(l);
         if (m) {
             var name = m[1];
-            var unit;
-            var status, status_class;
-
-            if (name == "Directory" && config.realm)
-                name = "dirsrv@" + config.realm;
-
-            // XXX - ipctl should tell us the unit
-            unit = name + ".service";
-
-            status = status_class = m[2];
-            if (status_class == "RUNNING")
-                status = "Running";
-            else if (status_class == "STOPPED")
-                status = "Not running";
-
-            services.push({ name: name, unit: unit,
-                            status: status, status_class: status_class });
-            if (m[2] != "STOPPED")
-                stopped = false;
+	    var value = m[2];
+            env.push({ name: name,
+                       value: value });
         }
     });
 
     return {
-        stopped: stopped,
-        services: services,
-        config: config
+        variable: env,
     };
 }
 
-class ServiceStatus extends React.Component {
+class SambaStatus extends React.Component {
     render() {
         var status = this.props.status;
         return (
             <div>
-                <p>The FreeIPA web interface can be accessed at <a href={"https://" + status.config.host + "/ipa/ui"}>
-                    https://{status.config.host}/ipa/ui</a>
-                </p>
-                <h3>Services</h3>
-                <table className="service-status-table">
-                    { status.services.map(s => (
+                <h3>Samba AD configuration</h3>
+                <table className="variable-status-table">
+                    { status.variable.map(s => (
                           <tr>
-                              <td>
-                                  <a onClick={utils.left_click(() => {
-                                      cockpit.jump("system/services#/" + encodeURIComponent(s.unit));
-                                      })}>
+                              <td className="variable-status-name">
                                       {s.name}
-                                  </a>
                               </td>
-                              <td className={s.status_class}>{s.status}</td>
+                              <td className="variable-status-value">{s.value}</td>
                           </tr>
                       ))
                     }
@@ -178,11 +143,9 @@ class Status extends React.Component {
 
     update_status() {
         this.setState({ status: { running: true } });
-        cockpit.spawn([ "ipactl", "status" ], { superuser: true, err: "message" })
+        cockpit.spawn([ "samba-tool", "domain", "info", "127.0.0.1" ], { superuser: true, err: "message" })
                .done(output => {
-                   cockpit.file("/etc/ipa/default.conf").read().done(config => {
-                       this.setState({ status: parse_ipactl_status(output, config) });
-                   });
+                       this.setState({ status: parse_samba_tool_domain_info(output) });
                })
                .fail((error) => {
                    if (error.exit_status == 4) {
@@ -196,7 +159,7 @@ class Status extends React.Component {
     start() {
         this.setState({ action: { running: true,
                                   title: "Starting" } });
-        cockpit.spawn([ "ipactl", "start" ], { superuser: true, err: "message" })
+        cockpit.spawn([ "systemctl", "start", "samba" ], { superuser: true, err: "message" })
                .done(() => {
                    this.setState({ action: { } });
                    this.update_status();
@@ -211,7 +174,7 @@ class Status extends React.Component {
     stop() {
         this.setState({ action: { running: true,
                                   title: "Stopping" } });
-        cockpit.spawn([ "ipactl", "stop" ], { superuser: true, err: "message" })
+        cockpit.spawn([ "systemctl", "stop", "samba" ], { superuser: true, err: "message" })
                .done(() => {
                    this.setState({ action: { } });
                    this.update_status();
@@ -228,7 +191,7 @@ class Status extends React.Component {
 
         // XXX - hard coded
         // XXX - just use samba-ad-ldap?
-        var ports = [ "http", "https", "ldap", "ldaps", "kerberos", "kpasswd", "ntp" ];
+        var ports = [ "ldap", "ldaps", "kerberos", "kpasswd", "samba", "samba-client" ];
 
         var status = this.state.status;
 
@@ -273,7 +236,7 @@ class Status extends React.Component {
                     <tbody>
                         <tr>
                             <td><img src="logo.png"/></td>
-                            <td>FreeIPA</td>
+                            <td>Samba AD</td>
                             <td>{status_text}</td>
                             { status_button? <td>{status_button}</td> : null }
                         </tr>
@@ -283,7 +246,7 @@ class Status extends React.Component {
                     <div className="pull-right">
                         <FirewallPorts ports={ports}/>
                     </div>
-                    <ServiceStatus status={status}/>
+                    <SambaStatus status={status}/>
                 </div>
             </div>
         );

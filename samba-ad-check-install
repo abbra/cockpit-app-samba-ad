@@ -9,10 +9,14 @@ client_installed, server_installed = (False, False)
 result = dict()
 result['result'] = 'NOT_CONFIGURED'
 
-if client_installed and server_installed:
+try:
+    server_installed = os.stat('/var/lib/samba/private/secrets.keytab') != None
+except OSError:
+    server_installed = False
+
+if server_installed:
     result['result'] = 'SERVER_CONFIGURED'
 elif client_installed and not server_installed:
     result['result'] = 'CLIENT_CONFIGURED'
 
 print(json.dumps(result))
-

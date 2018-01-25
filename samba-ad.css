@@ -39,11 +39,20 @@
     text-align: right;
 }
 
-.service-status-table td:nth-child(1) {
+.variable-status-table td:nth-child(1) {
     padding-right: 5em;
 }
 
-.service-status-table td:nth-child(2).STOPPED {
+.variable-status-name {
+    color: gray;
+}
+
+.variable-status-value {
+    color: green;
+}
+
+
+.variable-status-table td:nth-child(2).STOPPED {
     color: red;
 }
 
