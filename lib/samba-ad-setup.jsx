@@ -6,45 +6,29 @@ import dialog from "cockpit-components-dialog.jsx"
 import OnOff from "cockpit-components-onoff.jsx"
 
 /* SETUP */
+function run_provision(options, progress_cb) {
+    var promise;
 
-function setup(options, progress_cb) {
-    var outbuf = "";
-    var cur_title, cur_perc, progress;
-    var perc_re = /^ {2}\[(\d+)\/(\d+)\]/;
+    var script = `
+    samba-tool domain provision \
+                    --use-rfc2307 \
+                    --realm ${options.realm} \
+                    --domain ${options.domain} \
+                    --server-role ${options.setup_type} \
+                    --adminpass ${options.adminpw} \
+                    --dns-backend SAMBA_INTERNAL
 
-    function parse_progress(data) {
-        outbuf += data;
-        var lines = outbuf.split("\n");
-        for (var i = 0; i < lines.length-1; i++) {
-            var m = perc_re.exec(lines[i]);
-            if (m) {
-                cur_perc = parseInt(m[1])/parseInt(m[2]) * 100;
-            } else {
-                cur_title = lines[i];
-            }
-        }
-        if (cur_title) {
-            progress = cur_title;
-            if (cur_perc)
-                progress += " / " + cur_perc.toFixed(0) + "%";
-            progress_cb(progress);
-        }
-        outbuf = lines[lines.length-1];
-    }
+    cp -f /var/lib/samba/private/krb5.conf /etc/krb5.conf.d/samba_ad_realm
+    systemctl start samba
+    samba-tool domain info $(hostname -f)`
 
-    var promise = cockpit.spawn([ "ipa-server-install",
-                                  "-U",
-                                  "-r", options.realm,
-                                  "-p", options.dirmanpw,
-                                  "-a", options.adminpw ],
-                                { superuser: true,
-                                  err: "message"
-                                });
+    promise = cockpit.script(script,  
+                             { superuser: true,
+                               err: "message"
+    });
 
-    promise.stream(parse_progress);
     promise.cancel = () => {
-        console.log("cancelling");
-        promise.close("terminated");
+        console.log("cancelling samba-tool provision");
     };
 
     return promise;
@@ -101,8 +85,7 @@ class SetupBody extends React.Component {
             <div className="modal-body">
                 <table className="form-table-ct">
                     { dialog_row("Realm", 'realm', 'text') }
-                    { dialog_row("Directory Manager password", 'dirmanpw', 'password') }
-                    { dialog_row("Confirm Directory Manager password", 'dirmanpw2', 'password') }
+                    { dialog_row("NetBIOS domain name", 'domain', 'text') }
                     { dialog_row("Admin password", 'adminpw', 'password') }
                     { dialog_row("Confirm Admin password", 'adminpw2', 'password') }
                 </table>
@@ -117,10 +100,10 @@ function setup_dialog(element, done_callback) {
     var errors = null;
     var values = {
         realm: "",
-        dirmanpw: "",
-        dirmanpw2: "",
+        domain: "",
         adminpw: "",
-        adminpw2: ""
+        adminpw2: "",
+	setup_type: element.setup_type,
     };
 
     function onchanged() {
@@ -148,6 +131,8 @@ function setup_dialog(element, done_callback) {
 
         if (!values.realm)
             errors.realm = "Realm can't be empty";
+        if (!values.domain)
+            errors.realm = "NetBIOS domain can't be empty";
 
         function validate_password(field, field2) {
             if (!values[field])
@@ -158,7 +143,6 @@ function setup_dialog(element, done_callback) {
                 errors[field2] = "Passwords don't match";
         }
 
-        validate_password('dirmanpw', 'dirmanpw2');
         validate_password('adminpw', 'adminpw2');
 
         if (Object.keys(errors).length === 0)
@@ -180,7 +164,7 @@ function setup_dialog(element, done_callback) {
                        if (cancelled) {
                            cockpit.reject();
                        } else {
-                           setup_promise = setup(values, progress_cb);
+                           setup_promise = run_provision(values, progress_cb);
                            setup_promise.
                                          done(function () {
                                              dfd.resolve();

@@ -6,8 +6,8 @@ import utils from "samba-ad-utils.jsx"
 import Status from "samba-ad-status.jsx"
 import setup from "samba-ad-setup.jsx"
 
-function show_setup(setup_type, self, event) {
-        setup.setup_dialog(setup_type, () => {
+function show_setup(element, self, event) {
+        setup.setup_dialog(element, () => {
             self.update_status();
         });
 }
